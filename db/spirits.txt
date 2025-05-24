@@ -1,0 +1,4 @@
+username:spirits
+password:poop
+email_1: 2 floofydoggo funny_file
+email_1: 3 floofydoggo funny_file2

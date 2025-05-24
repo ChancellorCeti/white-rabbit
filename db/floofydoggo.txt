@@ -1,0 +1,4 @@
+username:floofydoggo
+password:chickencurry
+email_0: 2 spirits funny_file
+email_0: 3 spirits funny_file2
