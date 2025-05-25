@@ -194,7 +194,7 @@ int main() {
               // do stuff to make it get list of received emails
               int matches;
               char **inbox = extract_emails_starting_with_char(
-                  concat_all(3, "db/", args[0], ".txt"), "email_0", &matches);
+                  concat_all(3, "db/users/", args[0], ".txt"), "email_0", &matches);
               for (int j = 0; j < matches; j++) {
                 if (send(clientFd, inbox[j], strlen(inbox[j]), 0) == -1) {
                   perror("[-]Error in sending inbox.");
@@ -224,7 +224,7 @@ int main() {
               // do stuff to make it get list of received emails
               int matches;
               char **inbox = extract_emails_starting_with_char(
-                  concat_all(3, "db/", args[0], ".txt"), "email_1", &matches);
+                  concat_all(3, "db/users/", args[0], ".txt"), "email_1", &matches);
               for (int j = 0; j < matches; j++) {
                 if (send(clientFd, inbox[j], strlen(inbox[j]), 0) == -1) {
                   perror("[-]Error in sending inbox.");

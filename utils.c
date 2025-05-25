@@ -34,7 +34,7 @@ void write_emailfile(int sockfd, queuedSend email_metadata) {
   FILE *fp;
   char new_id[1024];
   next_id(new_id);
-  char *filename = concat_all(3, "db/", new_id, ".txt");
+  char *filename = concat_all(3, "db/emails/", new_id, ".txt");
   char buffer[15000];
   fp = fopen(filename, "w+");
   while (1) {
@@ -51,11 +51,11 @@ void write_emailfile(int sockfd, queuedSend email_metadata) {
     bzero(buffer, 15000);
   }
   fclose(fp);
-  add_line_to_file(concat_all(3, "db/", email_metadata.recipient, ".txt"),
+  add_line_to_file(concat_all(3, "db/users/", email_metadata.recipient, ".txt"),
                    concat_all(7, "email_0: ", new_id, " ",
                               email_metadata.sender, " ",
                               email_metadata.subject, "\n"));
-  add_line_to_file(concat_all(3, "db/", email_metadata.sender, ".txt"),
+  add_line_to_file(concat_all(3, "db/users/", email_metadata.sender, ".txt"),
                    concat_all(7, "email_1: ", new_id, " ",
                               email_metadata.recipient, " ",
                               email_metadata.subject, "\n"));
@@ -137,7 +137,7 @@ char **get_arguments(char *command, int *arg_count) {
 
 char *create_user(char *username, char *password) {
   FILE *fptr;
-  char *filename = concat_all(3, "db/", username, ".txt");
+  char *filename = concat_all(3, "db/users/", username, ".txt");
   fptr = fopen(filename, "r");
   if (fptr != NULL) {
     fclose(fptr);
@@ -157,7 +157,7 @@ char *create_user(char *username, char *password) {
 
 struct authenticationResult authenticate_user(char *username, char *password) {
   FILE *fptr;
-  char *filename = concat_all(3, "db/", username, ".txt");
+  char *filename = concat_all(3, "db/users/", username, ".txt");
   struct authenticationResult res;
   fptr = fopen(filename, "r");
   if (fptr == NULL) {
@@ -168,8 +168,6 @@ struct authenticationResult authenticate_user(char *username, char *password) {
   }
   char *line;
   size_t line_size = 0;
-  // to-do add error checking, store results of getline calls in variables and
-  // send errors depending on bad values
   getline(&line, &line_size, fptr);
   bzero(line, line_size);
   getline(&line, &line_size, fptr);
@@ -194,7 +192,8 @@ char **extract_emails_starting_with_char(char *filename, char *start,
   FILE *fp = fopen(filename, "r");
   int res_count = 0;
   if (fp == NULL) {
-    perror("error opening file");
+    printf("%s\n",filename);
+    perror("error opening file at line 195, filename was");
     exit(1);
   }
   char line[LINE_LEN];
@@ -211,13 +210,8 @@ char **extract_emails_starting_with_char(char *filename, char *start,
         return NULL;
       }
       char **temp = realloc(res, (res_count + 1) * sizeof(char *));
-      // to-do:fix the warning that occurs here (variable may be used after
-      // realloc)
       if (!line_copy) {
         perror("realloc failed");
-        for (int i = 0; i < res_count; ++i)
-          free(res[i]);
-        free(res);
         fclose(fp);
         return NULL;
       }
@@ -232,7 +226,7 @@ char **extract_emails_starting_with_char(char *filename, char *start,
 }
 void dl_email(char *id, char *username, int clientFd) {
   FILE *fp;
-  fp = fopen(concat_all(3, "db/", id, ".txt"), "r");
+  fp = fopen(concat_all(3, "db/emails/", id, ".txt"), "r");
   if (fp == NULL) {
     char client_message[] = "no email exists with the provided ID\n";
     if (write(clientFd, client_message, strlen(client_message)) < 0) {
@@ -241,14 +235,12 @@ void dl_email(char *id, char *username, int clientFd) {
     }
     return;
   }
-  char *user_db_filename = concat_all(3, "db/", username, ".txt");
+  char *user_db_filename = concat_all(3, "db/users/", username, ".txt");
   int sender_matches;
   int recipient_matches;
-  // to-do: do smth with is_sender and is_recipient variables or just refactor
-  // function to only return # of matches
-  char **is_sender = extract_emails_starting_with_char(
+  extract_emails_starting_with_char(
       user_db_filename, concat("email_1: ", id), &sender_matches);
-  char **is_recipient = extract_emails_starting_with_char(
+  extract_emails_starting_with_char(
       user_db_filename, concat("email_0: ", id), &recipient_matches);
   if (!(sender_matches == 1) && !(recipient_matches == 1)) {
     char client_message[] = "you do not have rights to download this email\n";

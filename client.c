@@ -8,6 +8,16 @@
 #define SMALL_BUF_SIZE 1024
 #define SERVER_PORT 37
 
+const char help_message[] = "Usage: ./client.out <command> [<args>]\n"
+"This client supports the following commands\n"
+"./client.out create_user username password    Creates a new user in the database with the given username and password\n"
+"./client.out open_inbox username password    Gives a list of all emails that have been received by a user\n"
+"./client.out open_outbox username password    Gives a list of all emails that have been sent by a user\n"
+"./client.out send_email username password recipient subject_line filename    Sends the user `recipient` an email containing the contents of the file `filename`\n"
+"./client.out dl_email username password id     Downloads the email with the given id to your computer. Only works if you are either the recipient or the sender of the email\n\n"
+"Please note that none of the arguments supplied to this program (username, password, recipient, etc) can contain spaces.\n"
+;
+
 int create_connection(const char *server_ip) {
   int sockfd;
   struct sockaddr_in serv_addr;
@@ -34,7 +44,7 @@ int create_connection(const char *server_ip) {
 }
 
 int main(int argc, char const *argv[]) {
-  char *filename;
+  const char *filename;
   int serverFd;
   struct sockaddr_in server;
   int len;
@@ -56,7 +66,6 @@ int main(int argc, char const *argv[]) {
       printf("incorrect number of arguments!");
       exit(1);
     }
-    // to-do: fix warning on line 59 (idk what it's even about)
     filename = argv[6];
     buffer =
         concat_all(8, "1 ", argv[2], " ", argv[3], " ", argv[4], " ", argv[5]);
@@ -79,6 +88,12 @@ int main(int argc, char const *argv[]) {
     }
     // make it expect dl_email username password id
     buffer = concat_all(6, "4 ", argv[2], " ", argv[3], " ", argv[4]);
+  } else if (strcmp(argv[1],"help")==0){
+        printf("%s",help_message);
+        return 0;
+  }else{
+        printf("sorry, that is not a valid command!\n");
+        exit(1);
   }
   serverFd = socket(AF_INET, SOCK_STREAM, 0);
   if (serverFd < 0) {

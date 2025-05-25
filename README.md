@@ -22,6 +22,7 @@ make
 Then in one terminal window, cd into the cloned directory and run
 ```bash
 mkdir db
+mkdir db/emails/ && mkdir db/users/
 touch db/main_db.txt && cat "0" > db/main_db.txt
 ./server.out
 ```
