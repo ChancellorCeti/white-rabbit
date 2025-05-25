@@ -4,7 +4,6 @@ void next_id(char *res_string) {
   FILE *fp;
   int res;
   char *filename = "db/main_db.txt";
-  char buffer[BUF_SIZE];
   fp = fopen(filename, "r+");
   fscanf(fp, "%d", &res);
   res += 1;
@@ -45,8 +44,8 @@ void write_emailfile(int sockfd, queuedSend email_metadata) {
       return;
     }
     int q = fwrite(buffer, sizeof(char), strlen(buffer), fp);
-    if (q != strlen(buffer)) {
-      perror("wtf");
+    if (q != (int) strlen(buffer)) {
+      perror("could not write full line of email to database");
       exit(65);
     }
     bzero(buffer, 15000);
@@ -169,9 +168,10 @@ struct authenticationResult authenticate_user(char *username, char *password) {
   }
   char *line;
   size_t line_size = 0;
-  int line_one = getline(&line, &line_size, fptr);
+  //to-do add error checking, store results of getline calls in variables and send errors depending on bad values
+  getline(&line, &line_size, fptr);
   bzero(line, line_size);
-  int line_two = getline(&line, &line_size, fptr);
+  getline(&line, &line_size, fptr);
   char real_pwd[strlen(line) - 8];
   strncpy(real_pwd, line + 9, strlen(line) - 9);
   real_pwd[strlen(line) - 9] = '\0';
@@ -210,6 +210,7 @@ char **extract_emails_starting_with_char(char *filename, char *start,
         return NULL;
       }
       char **temp = realloc(res, (res_count + 1) * sizeof(char *));
+      // to-do:fix the warning that occurs here (variable may be used after realloc)
       if (!line_copy) {
         perror("realloc failed");
         for (int i = 0; i < res_count; ++i)
@@ -241,6 +242,7 @@ void dl_email(char *id, char *username, int clientFd) {
   char *user_db_filename = concat_all(3, "db/", username, ".txt");
   int sender_matches;
   int recipient_matches;
+  // to-do: do smth with is_sender and is_recipient variables or just refactor function to only return # of matches
   char **is_sender = extract_emails_starting_with_char(
       user_db_filename, concat("email_1: ", id), &sender_matches);
   char **is_recipient = extract_emails_starting_with_char(

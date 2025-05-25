@@ -56,6 +56,7 @@ int main(int argc, char const *argv[]) {
       printf("incorrect number of arguments!");
       exit(1);
     }
+    //to-do: fix warning on line 59 (idk what it's even about)
     filename = argv[6];
     buffer =
         concat_all(8, "1 ", argv[2], " ", argv[3], " ", argv[4], " ", argv[5]);
@@ -104,7 +105,6 @@ int main(int argc, char const *argv[]) {
   if (strcmp(argv[1], "open_inbox") == 0) {
     printf("The emails you have received are as follows:\n");
     printf("JUNK_TEXT ID SENDER SUBJECT\n");
-    char **inbox;
     int n;
     char line[BUF_SIZE];
 
@@ -131,7 +131,6 @@ int main(int argc, char const *argv[]) {
   if (strcmp(argv[1], "open_outbox") == 0) {
     printf("The emails you have sent are as follows:\n");
     printf("JUNK_TEXT ID RECIPIENT SUBJECT\n");
-    char **inbox;
     int n;
     char line[SMALL_BUF_SIZE];
 
@@ -142,12 +141,7 @@ int main(int argc, char const *argv[]) {
         return 0;
       }
       printf("%s\n", line);
-      /*int q = fwrite(line, sizeof(char), strlen(line), inbox);
-      if (q != strlen(buffer)) {
-          perror("wtf");
-          exit(65);
-      }*/
-      bzero(line, SMALL_BUF_SIZE);
+     bzero(line, SMALL_BUF_SIZE);
     }
     return 0;
   }
@@ -164,7 +158,7 @@ int main(int argc, char const *argv[]) {
     }
     printf("%s", recv);
     int n;
-    char line[BUF_SIZE];
+    char line[15000];
     FILE *fp;
     if (argc < 5) {
       perror("insufficient arguments");
@@ -174,17 +168,17 @@ int main(int argc, char const *argv[]) {
     fp = fopen(wanted_email_filename, "w");
     free(wanted_email_filename);
     while (1) {
-      n = read(serverFd, line, BUF_SIZE);
+      n = read(serverFd, line, 15000);
       if (n <= 0) {
         break;
         return 0;
       }
       int q = fwrite(line, sizeof(char), strlen(line), fp);
-      if (q != strlen(line)) {
+      if (q != (int) strlen(line)) {
         perror("failed to write to file");
         exit(65);
       }
-      bzero(line, SMALL_BUF_SIZE);
+      bzero(line, 15000);
     }
     return 0;
   }

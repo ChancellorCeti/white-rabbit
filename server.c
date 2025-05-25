@@ -35,8 +35,6 @@ queuedSend find_queue_member(int member_address, queuedSend *queue) {
   return res;
 }
 
-void handle_ready_client(int clientFd) {}
-
 int main() {
   int serverFd, clientFd;
   struct sockaddr_in server, client;
