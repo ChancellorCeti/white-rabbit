@@ -44,7 +44,7 @@ void write_emailfile(int sockfd, queuedSend email_metadata) {
       return;
     }
     int q = fwrite(buffer, sizeof(char), strlen(buffer), fp);
-    if (q != (int) strlen(buffer)) {
+    if (q != (int)strlen(buffer)) {
       perror("could not write full line of email to database");
       exit(65);
     }
@@ -168,7 +168,8 @@ struct authenticationResult authenticate_user(char *username, char *password) {
   }
   char *line;
   size_t line_size = 0;
-  //to-do add error checking, store results of getline calls in variables and send errors depending on bad values
+  // to-do add error checking, store results of getline calls in variables and
+  // send errors depending on bad values
   getline(&line, &line_size, fptr);
   bzero(line, line_size);
   getline(&line, &line_size, fptr);
@@ -210,7 +211,8 @@ char **extract_emails_starting_with_char(char *filename, char *start,
         return NULL;
       }
       char **temp = realloc(res, (res_count + 1) * sizeof(char *));
-      // to-do:fix the warning that occurs here (variable may be used after realloc)
+      // to-do:fix the warning that occurs here (variable may be used after
+      // realloc)
       if (!line_copy) {
         perror("realloc failed");
         for (int i = 0; i < res_count; ++i)
@@ -242,7 +244,8 @@ void dl_email(char *id, char *username, int clientFd) {
   char *user_db_filename = concat_all(3, "db/", username, ".txt");
   int sender_matches;
   int recipient_matches;
-  // to-do: do smth with is_sender and is_recipient variables or just refactor function to only return # of matches
+  // to-do: do smth with is_sender and is_recipient variables or just refactor
+  // function to only return # of matches
   char **is_sender = extract_emails_starting_with_char(
       user_db_filename, concat("email_1: ", id), &sender_matches);
   char **is_recipient = extract_emails_starting_with_char(

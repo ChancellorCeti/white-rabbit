@@ -56,7 +56,7 @@ int main(int argc, char const *argv[]) {
       printf("incorrect number of arguments!");
       exit(1);
     }
-    //to-do: fix warning on line 59 (idk what it's even about)
+    // to-do: fix warning on line 59 (idk what it's even about)
     filename = argv[6];
     buffer =
         concat_all(8, "1 ", argv[2], " ", argv[3], " ", argv[4], " ", argv[5]);
@@ -141,7 +141,7 @@ int main(int argc, char const *argv[]) {
         return 0;
       }
       printf("%s\n", line);
-     bzero(line, SMALL_BUF_SIZE);
+      bzero(line, SMALL_BUF_SIZE);
     }
     return 0;
   }
@@ -174,7 +174,7 @@ int main(int argc, char const *argv[]) {
         return 0;
       }
       int q = fwrite(line, sizeof(char), strlen(line), fp);
-      if (q != (int) strlen(line)) {
+      if (q != (int)strlen(line)) {
         perror("failed to write to file");
         exit(65);
       }
