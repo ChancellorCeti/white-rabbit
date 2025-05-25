@@ -25,6 +25,5 @@ and in another, cd into the cloned directory and run
 ./client.out get_outbox username password
 ./client.out dl_email recipient password2 0
 cat 0.txt
-./client.out 
 ```
 This will give a basic demonstration of the features present so far in this project.
