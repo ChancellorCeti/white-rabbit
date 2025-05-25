@@ -120,6 +120,9 @@ int main(int argc, char const *argv[]) {
           perror("wtf");
           exit(65);
       }*/
+      if (strcmp("incorrect password!\n", line) == 0) {
+        return 0;
+      }
       bzero(line, BUF_SIZE);
     }
     return 0;

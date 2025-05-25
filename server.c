@@ -274,10 +274,3 @@ int main() {
   close(serverFd);
   return 0;
 }
-
-// 0 -> account creation
-// 1 -> send email
-// 2 -> get list of emails people have sent to you
-// 3 -> download a specific email
-// 4-> get list of emails you've actually sent
-// 5-> user auth "5 username password"

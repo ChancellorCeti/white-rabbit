@@ -167,9 +167,23 @@ struct authenticationResult authenticate_user(char *username, char *password) {
     res.message = "no such user exists\n\0";
     return res;
   }
-  fclose(fptr);
+  char *line;
+  size_t line_size = 0;
+  int line_one = getline(&line, &line_size, fptr);
+  bzero(line, line_size);
+  int line_two = getline(&line, &line_size, fptr);
+  char real_pwd[strlen(line) - 8];
+  strncpy(real_pwd, line + 9, strlen(line) - 9);
+  real_pwd[strlen(line) - 9] = '\0';
+  if (strcmp(real_pwd, concat(password, "\n")) != 0) {
+    res.result = false;
+    res.message = "incorrect password!\n";
+    return res;
+  }
   res.result = true;
   res.message = "user authentication successful\n";
+
+  fclose(fptr);
   return res;
 }
 
