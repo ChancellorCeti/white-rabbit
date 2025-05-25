@@ -2,6 +2,15 @@
 
 White Rabbit is an elementary email program built in C. Compilation will provide one executable for a server and another for a client. A variety of commands can be run with the client executable to communicate with other people connecting to the same server.
 
+The project name is inspired by the ["follow the white rabbit" scene from The Matrix](https://www.youtube.com/watch?v=iDIwQTTzstk). Email was cooler when it was done through the terminal, and The Matrix would've been a much more boring movie if Neo was using Gmail. 
+
+This project is built on the following principles that I believe will eventually make it better than Gmail:
+
+- Fast server response time
+- No bloatware in the client application. Easy to use, no unnecessary features, no cluttered GUI, and not taking all eternity to open the inbox. 
+- Security (work in progress) and data privacy (in contrast to Gmail)
+- Freedom to write emails however you want. Markdown, html, any file can be sent as an email. Users should not be confined to writing emails using a nausea-inducing GUI that only lets you send certain types of content.
+
 To use this project on your own machine, simply run the following commands
 
 ```bash
