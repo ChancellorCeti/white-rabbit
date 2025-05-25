@@ -33,13 +33,13 @@ void add_line_to_file(char *file_name, char *content) {
 void write_emailfile(int sockfd, queuedSend email_metadata) {
   int n;
   FILE *fp;
-  char new_id[BUF_SIZE];
+  char new_id[1024];
   next_id(new_id);
   char *filename = concat_all(3, "db/", new_id, ".txt");
-  char buffer[BUF_SIZE];
+  char buffer[15000];
   fp = fopen(filename, "w+");
   while (1) {
-    n = recv(sockfd, buffer, BUF_SIZE, 0);
+    n = recv(sockfd, buffer, 15000, 0);
     if (n <= 0) {
       break;
       return;
@@ -49,7 +49,7 @@ void write_emailfile(int sockfd, queuedSend email_metadata) {
       perror("wtf");
       exit(65);
     }
-    bzero(buffer, BUF_SIZE);
+    bzero(buffer, 15000);
   }
   fclose(fp);
   add_line_to_file(concat_all(3, "db/", email_metadata.recipient, ".txt"),
@@ -171,4 +171,90 @@ struct authenticationResult authenticate_user(char *username, char *password) {
   res.result = true;
   res.message = "user authentication successful\n";
   return res;
+}
+
+char **extract_emails_starting_with_char(char *filename, char *start,
+                                         int *matches) {
+  char **res = NULL;
+  FILE *fp = fopen(filename, "r");
+  int res_count = 0;
+  if (fp == NULL) {
+    perror("error opening file");
+    exit(1);
+  }
+  char line[LINE_LEN];
+  while (fgets(line, sizeof(line), fp)) {
+    if (strncmp(line, start, strlen(start)) == 0) {
+      line[strcspn(line, "\n")] = '\0';
+      char *line_copy = strdup(line);
+      if (!line_copy) {
+        perror("strdup failed");
+        for (int i = 0; i < res_count; ++i)
+          free(res[i]);
+        free(res);
+        fclose(fp);
+        return NULL;
+      }
+      char **temp = realloc(res, (res_count + 1) * sizeof(char *));
+      if (!line_copy) {
+        perror("realloc failed");
+        for (int i = 0; i < res_count; ++i)
+          free(res[i]);
+        free(res);
+        fclose(fp);
+        return NULL;
+      }
+      res = temp;
+      res[res_count++] = line_copy;
+    }
+  }
+  fclose(fp);
+  if (matches)
+    *matches = res_count;
+  return res;
+}
+void dl_email(char *id, char *username, int clientFd) {
+  FILE *fp;
+  fp = fopen(concat_all(3, "db/", id, ".txt"), "r");
+  if (fp == NULL) {
+    char client_message[] = "no email exists with the provided ID\n";
+    if (write(clientFd, client_message, strlen(client_message)) < 0) {
+      printf("Write error");
+      exit(6);
+    }
+    return;
+  }
+  char *user_db_filename = concat_all(3, "db/", username, ".txt");
+  int sender_matches;
+  int recipient_matches;
+  char **is_sender = extract_emails_starting_with_char(
+      user_db_filename, concat("email_1: ", id), &sender_matches);
+  char **is_recipient = extract_emails_starting_with_char(
+      user_db_filename, concat("email_0: ", id), &recipient_matches);
+  if (!(sender_matches == 1) && !(recipient_matches == 1)) {
+    char client_message[] = "you do not have rights to download this email\n";
+    if (write(clientFd, client_message, strlen(client_message)) < 0) {
+      printf("Write error");
+      exit(6);
+    }
+    return;
+  }
+  char good_dl_message[] = "sending file now!\n";
+  if (write(clientFd, good_dl_message, strlen(good_dl_message)) < 0) {
+    printf("Write error");
+    exit(6);
+  }
+  send_file(fp, clientFd);
+}
+
+void send_file(FILE *fp, int sockfd) {
+  char data[15000] = {0};
+  while (fgets(data, 15000, fp) != NULL) {
+    if (send(sockfd, data, strlen(data), 0) == -1) {
+      perror("[-]Error in sending file.");
+      exit(1);
+    }
+    bzero(data, 15000);
+  }
+  close(sockfd);
 }

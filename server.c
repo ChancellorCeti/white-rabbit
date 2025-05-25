@@ -20,6 +20,7 @@ typedef struct sockaddr_in SA_IN;
 const char bad_arguments[] =
     "You have either used the incorrect number of arguments or put spaces in "
     "one of the arguments\n";
+const char bad_recipient[] = "recipient of that name does not exist\n";
 
 queuedSend find_queue_member(int member_address, queuedSend *queue) {
   queuedSend res;
@@ -106,7 +107,7 @@ int main() {
             } else {
               char *username = args[0];
               char *password = args[1];
-            free(args);
+              free(args);
               user_creation_output = create_user(username, password);
               if (write(clientFd, user_creation_output,
                         strlen(user_creation_output)) < 0) {
@@ -129,6 +130,16 @@ int main() {
               if (authres.result == false) {
                 if (write(clientFd, authres.message, strlen(authres.message)) <
                     0) {
+                  printf("Write error");
+                  exit(6);
+                }
+                continue;
+              }
+              struct authenticationResult recipient_exists;
+              recipient_exists = authenticate_user(args[2], "");
+              if (strcmp("no such user exists\n\0", recipient_exists.message) ==
+                  0) {
+                if (write(clientFd, bad_recipient, strlen(bad_recipient)) < 0) {
                   printf("Write error");
                   exit(6);
                 }
@@ -162,29 +173,111 @@ int main() {
               if (filerecvSocket > max_fd)
                 max_fd = filerecvSocket;
             }
+          } else if (buffer[0] == '2') {
+
+            int arg_count;
+            char **args = get_arguments(buffer + 2, &arg_count);
+            if (arg_count != 2) {
+              if (write(clientFd, bad_arguments, sizeof(bad_arguments)) < 0) {
+                perror("Write error");
+                exit(6);
+              }
+            } else {
+              struct authenticationResult authres;
+              authres = authenticate_user(args[0], args[1]);
+              if (authres.result == false) {
+                if (write(clientFd, authres.message, strlen(authres.message)) <
+                    0) {
+                  printf("Write error");
+                  exit(6);
+                }
+                continue;
+              }
+              // do stuff to make it get list of received emails
+              int matches;
+              char **inbox = extract_emails_starting_with_char(
+                  concat_all(3, "db/", args[0], ".txt"), "email_0", &matches);
+              for (int j = 0; j < matches; j++) {
+                if (send(clientFd, inbox[j], strlen(inbox[j]), 0) == -1) {
+                  perror("[-]Error in sending inbox.");
+                  exit(1);
+                }
+              }
+            }
+          } else if (buffer[0] == '3') {
+            int arg_count;
+            char **args = get_arguments(buffer + 2, &arg_count);
+            if (arg_count != 2) {
+              if (write(clientFd, bad_arguments, sizeof(bad_arguments)) < 0) {
+                perror("Write error");
+                exit(6);
+              }
+            } else {
+              struct authenticationResult authres;
+              authres = authenticate_user(args[0], args[1]);
+              if (authres.result == false) {
+                if (write(clientFd, authres.message, strlen(authres.message)) <
+                    0) {
+                  printf("Write error");
+                  exit(6);
+                }
+                continue;
+              }
+              // do stuff to make it get list of received emails
+              int matches;
+              char **inbox = extract_emails_starting_with_char(
+                  concat_all(3, "db/", args[0], ".txt"), "email_1", &matches);
+              for (int j = 0; j < matches; j++) {
+                if (send(clientFd, inbox[j], strlen(inbox[j]), 0) == -1) {
+                  perror("[-]Error in sending inbox.");
+                  exit(1);
+                }
+              }
+            }
+          } else if (buffer[0] == '4') {
+            int arg_count;
+            char **args = get_arguments(buffer + 2, &arg_count);
+            if (arg_count != 3) {
+              if (write(clientFd, bad_arguments, sizeof(bad_arguments)) < 0) {
+                perror("Write error");
+                exit(6);
+              }
+            } else {
+              struct authenticationResult authres;
+              authres = authenticate_user(args[0], args[1]);
+              if (authres.result == false) {
+                if (write(clientFd, authres.message, strlen(authres.message)) <
+                    0) {
+                  printf("Write error");
+                  exit(6);
+                }
+                continue;
+              }
+              // do stuff to make it check if email exists and then send it
+              dl_email(args[2], args[0], clientFd);
+            }
           }
 
-          }else{
-            if (FD_ISSET(i, &email_send_sockets)) {
-              queuedSend socket_metadata =
-                  find_queue_member(i, email_send_queue);
-              write_emailfile(i, socket_metadata);
-            }
-            FD_CLR(i, &current_sockets);
+        } else {
+          if (FD_ISSET(i, &email_send_sockets)) {
+            queuedSend socket_metadata = find_queue_member(i, email_send_queue);
+            write_emailfile(i, socket_metadata);
+          }
+          FD_CLR(i, &current_sockets);
         }
       }
 
       close(clientFd);
     }
+  }
+
+  close(serverFd);
+  return 0;
 }
 
-    close(serverFd);
-    return 0;
-}
-
-  // 0 -> account creation
-  // 1 -> send email
-  // 2 -> get list of emails people have sent to you
-  // 3 -> download a specific email
-  // 4-> get list of emails you've actually sent
-  // 5-> user auth "5 username password"
+// 0 -> account creation
+// 1 -> send email
+// 2 -> get list of emails people have sent to you
+// 3 -> download a specific email
+// 4-> get list of emails you've actually sent
+// 5-> user auth "5 username password"

@@ -16,6 +16,7 @@
 #define PORT 37
 #define SOCKETERROR (-1)
 #define BUF_SIZE 32768
+#define LINE_LEN 4096
 
 typedef struct sockaddr SA;
 typedef struct sockaddr_in SA_IN;
@@ -40,5 +41,9 @@ char *create_user(char *username, char *password);
 char *concat_all(int count, ...);
 struct authenticationResult authenticate_user(char *username, char *password);
 void next_id();
+char **extract_emails_starting_with_char(char *filename, char *start,
+                                         int *matches);
+void dl_email(char *id, char *username, int clientFd);
 
+void send_file(FILE *fp, int sockfd);
 #endif

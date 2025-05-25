@@ -5,20 +5,8 @@
 #include <string.h> // strlen, memset
 #include <unistd.h> // write, read, close
 #define BUF_SIZE 32768
+#define SMALL_BUF_SIZE 1024
 #define SERVER_PORT 37
-
-void send_file(FILE *fp, int sockfd) {
-  int n;
-  char data[BUF_SIZE] = {0};
-  while (fgets(data, BUF_SIZE, fp) != NULL) {
-    if (send(sockfd, data, sizeof(data), 0) == -1) {
-      perror("[-]Error in sending file.");
-      exit(1);
-    }
-    bzero(data, BUF_SIZE);
-  }
-  close(sockfd);
-}
 
 int create_connection(const char *server_ip) {
   int sockfd;
@@ -71,6 +59,25 @@ int main(int argc, char const *argv[]) {
     filename = argv[6];
     buffer =
         concat_all(8, "1 ", argv[2], " ", argv[3], " ", argv[4], " ", argv[5]);
+  } else if (strcmp(argv[1], "open_inbox") == 0) {
+    if (argc != 4) {
+      printf("incorrect number of arguments!");
+      exit(1);
+    }
+    buffer = concat_all(4, "2 ", argv[2], " ", argv[3]);
+  } else if (strcmp(argv[1], "open_outbox") == 0) {
+    if (argc != 4) {
+      printf("Incorrect number of arguments!");
+      exit(1);
+    }
+    buffer = concat_all(4, "3 ", argv[2], " ", argv[3]);
+  } else if (strcmp(argv[1], "dl_email") == 0) {
+    if (argc != 5) {
+      printf("Incorrect number of arguments!");
+      exit(1);
+    }
+    // make it expect dl_email username password id
+    buffer = concat_all(6, "4 ", argv[2], " ", argv[3], " ", argv[4]);
   }
   serverFd = socket(AF_INET, SOCK_STREAM, 0);
   if (serverFd < 0) {
@@ -93,12 +100,92 @@ int main(int argc, char const *argv[]) {
   free(buffer);
   char recv[BUF_SIZE];
   memset(recv, 0, sizeof(recv));
-  ssize_t total_read = 0;
-  ssize_t n;
+
+  if (strcmp(argv[1], "open_inbox") == 0) {
+    printf("The emails you have received are as follows:\n");
+    printf("JUNK_TEXT ID SENDER SUBJECT\n");
+    char **inbox;
+    int n;
+    char line[BUF_SIZE];
+
+    while (1) {
+      n = read(serverFd, line, BUF_SIZE);
+      if (n <= 0) {
+        break;
+        return 0;
+      }
+      printf("%s\n", line);
+      /*int q = fwrite(line, sizeof(char), strlen(line), inbox);
+      if (q != strlen(buffer)) {
+          perror("wtf");
+          exit(65);
+      }*/
+      bzero(line, BUF_SIZE);
+    }
+    return 0;
+  }
+
+  if (strcmp(argv[1], "open_outbox") == 0) {
+    printf("The emails you have sent are as follows:\n");
+    printf("JUNK_TEXT ID RECIPIENT SUBJECT\n");
+    char **inbox;
+    int n;
+    char line[SMALL_BUF_SIZE];
+
+    while (1) {
+      n = read(serverFd, line, SMALL_BUF_SIZE);
+      if (n <= 0) {
+        break;
+        return 0;
+      }
+      printf("%s\n", line);
+      /*int q = fwrite(line, sizeof(char), strlen(line), inbox);
+      if (q != strlen(buffer)) {
+          perror("wtf");
+          exit(65);
+      }*/
+      bzero(line, SMALL_BUF_SIZE);
+    }
+    return 0;
+  }
+
   if (read(serverFd, recv, sizeof(recv)) < 0) {
     perror("cannot read");
     exit(4);
   }
+
+  if (strcmp(argv[1], "dl_email") == 0) {
+    if (strcmp(recv, "sending file now!\n") != 0) {
+      printf("%s", recv);
+      return 0;
+    }
+    printf("%s", recv);
+    int n;
+    char line[BUF_SIZE];
+    FILE *fp;
+    if (argc < 5) {
+      perror("insufficient arguments");
+      exit(5);
+    }
+    char *wanted_email_filename = concat(argv[4], ".txt");
+    fp = fopen(wanted_email_filename, "w");
+    free(wanted_email_filename);
+    while (1) {
+      n = read(serverFd, line, BUF_SIZE);
+      if (n <= 0) {
+        break;
+        return 0;
+      }
+      int q = fwrite(line, sizeof(char), strlen(line), fp);
+      if (q != strlen(line)) {
+        perror("failed to write to file");
+        exit(65);
+      }
+      bzero(line, SMALL_BUF_SIZE);
+    }
+    return 0;
+  }
+
   if (recv[0] == '6') {
     printf("got the okay to send file");
     FILE *fp;
