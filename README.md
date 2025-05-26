@@ -19,7 +19,14 @@ cd white-rabbit
 make
 ```
 
-Then in one terminal window, cd into the cloned directory and run
+For a detailed description of how to use the client, run
+```bash
+./client.out help
+```
+
+For a quick demonstration of basic features, do the following:
+
+In one terminal window, cd into the cloned directory and run
 ```bash
 mkdir db
 mkdir db/emails/ && mkdir db/users/
@@ -36,4 +43,3 @@ and in another, cd into the cloned directory and run
 ./client.out dl_email recipient password2 0
 cat 0.txt
 ```
-This will give a basic demonstration of the features present so far in this project.
